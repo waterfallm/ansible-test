@@ -3,14 +3,14 @@
   tasks:
     # Upgrade packages
     - name: upgrade apt packages
-      become: true
+      become: yes
       apt:
         upgrade: yes
         update_cache: yes
 
     # Check if reboot is required
     - name: check if system reboot is required
-      become: true
+      become: yes
       stat:
         path: /var/run/reboot-required
       register: reboot_required
