@@ -10,33 +10,60 @@
           - curl
         update_cache: yes
 
-    - name: add Docker GPG key
-      apt_key:
-        url: https://download.docker.com/linux/ubuntu/gpg
-        state: present
-      
-    - name: get ubuntu version
-      command: "lsb_release -cs"
-      register: ubuntu_version
+- name: Check OS distribution
+  command: cat /etc/os-release
+  register: os_release
+  changed_when: false
 
-    - name: add Docker repository
-      apt_repository:
-        repo: "deb [arch=arm64] https://download.docker.com/linux/ubuntu {{ ubuntu_version.stdout }} stable"
-        state: present
+- name: Set OS distribution facts
+  set_fact:
+    is_ubuntu: "{{ 'Ubuntu' in os_release.stdout }}"
+    is_debian: "{{ 'Debian' in os_release.stdout }}"
 
-    - name: update apt cache
-      apt:
-        update_cache: yes
+  - name: Add Docker GPG key for Ubuntu
+    apt_key:
+      url: https://download.docker.com/linux/ubuntu/gpg
+      state: present
+    when: is_ubuntu
 
-    - name: install Docker
-      apt:
-        name:
-          - docker-ce
-          - docker-ce-cli
-          - containerd.io
-          - docker-compose-plugin
-          - docker-buildx-plugin
-        update_cache: yes
+  - name: Add Docker GPG key for Debian
+    apt_key:
+      url: https://download.docker.com/linux/debian/gpg
+      state: present
+    when: is_debian
+
+  - name: Get OS codename
+    command: "lsb_release -cs"
+    register: os_codename
+    changed_when: false
+
+  - name: Add Docker repository for Ubuntu
+    apt_repository:
+      repo: "deb [arch=arm64] https://download.docker.com/linux/ubuntu {{ os_codename.stdout }} stable"
+      state: present
+      filename: docker
+    when: is_ubuntu
+
+  - name: Add Docker repository for Debian
+    apt_repository:
+      repo: "deb [arch=arm64] https://download.docker.com/linux/debian {{ os_codename.stdout }} stable"
+      state: present
+      filename: docker
+    when: is_debian
+
+  - name: update apt cache
+    apt:
+      update_cache: yes
+
+  - name: install Docker
+    apt:
+      name:
+        - docker-ce
+        - docker-ce-cli
+        - containerd.io
+        - docker-compose-plugin
+        - docker-buildx-plugin
+      update_cache: yes
 
     # add the current user to the docker group
     - name: add user permissions
