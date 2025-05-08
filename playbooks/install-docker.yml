@@ -21,7 +21,7 @@
 
     - name: add Docker repository
       apt_repository:
-        repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ubuntu_version.stdout }} stable"
+        repo: "deb [arch=arm64] https://download.docker.com/linux/ubuntu {{ ubuntu_version.stdout }} stable"
         state: present
 
     - name: update apt cache
